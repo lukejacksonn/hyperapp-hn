@@ -5,7 +5,7 @@ node_js:
 script: npm run build
 
 deploy:
-  fqdn: hyperapp.deployable.site
+  fqdn: hyperapp-hn.deployable.site
   local_dir: dist
   provider: pages
   skip_cleanup: true
