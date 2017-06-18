@@ -1,4 +1,5 @@
 import { h, app, Router } from 'hyperapp'
+import { database } from './helpers/firebase'
 import './index.scss'
 
 app({
