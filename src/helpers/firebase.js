@@ -5,4 +5,4 @@ const app = firebase.initializeApp({
   databaseURL: 'https://hacker-news.firebaseio.com'
 })
 
-export const database = app.database()
+export const database = app.database().ref( 'v0' )
