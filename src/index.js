@@ -14,18 +14,32 @@ app({
   state: {
     item: {},
     items: [],
+    comments: {}
   },
   actions: {
     setItems: (s,a,d) => ({ items: d }),
     setItem: (s,a,d) => ({ item: d }),
-    setItemComments: (s,a,d) => ({ item: Object.assign({}, s.item, { kids: d }) }),
+    setComments: (s,a,d) => ({ comments: d }),
     fetchItem: (s,a,d) =>
       database.child(`item/${d}`)
       .once('value')
       .then(snap => snap.val())
       .catch(console.log),
-    fetchItemComments: (s,a,d) =>
-      Promise.all(s.item.kids.map(a.fetchItem)),
+    fetchItemComments: (s,a,d) => {
+      a.setItem(d) 
+      const comments = {}
+
+      function fetchComments (d) {
+        comments[d.id] = d
+        if (d && d.kids) {
+          return Promise.all(d.kids.map(a.fetchItem))
+            .then(kids => Promise.all(kids.map(fetchComments)))
+        }
+      }
+
+      return fetchComments(d)
+        .then(() => comments)
+    },
     fetchStories: (s,a,d) =>
       database.child(`${d}stories`)
       .once('value')
@@ -35,9 +49,8 @@ app({
       .catch(console.log),
     fetchStory: (s,a,d) =>
       a.fetchItem(d)
-      .then(a.setItem)
       .then(a.fetchItemComments)
-      .then(a.setItemComments)
+      .then(a.setComments)
       .catch(console.log),
   },
   events: {
@@ -45,7 +58,10 @@ app({
       (s,a,d) => d.match === '/' ? a.fetchStories('top') : null,
       (s,a,d) => d.match === '/:type/:page' ? a.fetchStories(d.params.type) : null,
       (s,a,d) => d.match === '/item/:id' ? a.fetchStory(d.params.id) : null,
-    ]
+    ],
+    update: (s,a,d) => d.comments && console.log(`
+      count: ${Object.keys(d.comments).length}
+    `, d)
   },
   view: [
     ['/', Stories],
