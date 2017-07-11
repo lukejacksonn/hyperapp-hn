@@ -35,6 +35,8 @@ app({
           return Promise.all(d.kids.map(a.fetchItem))
             .then(kids => Promise.all(kids.map(fetchComments)))
         }
+
+        return Promise.resolve()
       }
 
       return fetchComments(d)
