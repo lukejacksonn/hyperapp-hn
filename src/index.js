@@ -2,6 +2,7 @@ import { h, app } from 'hyperapp'
 import { Router } from '@hyperapp/router'
 
 import { database } from './helpers/firebase'
+import Linker from './plugins/linker'
 
 import { Fallback } from './pages/fallback'
 import { Stories } from './pages/stories'
@@ -9,69 +10,58 @@ import { Story } from './pages/story'
 
 import './index.scss'
 
+const fetchItem = items => id => items[id]
+  ? Promise.resolve(items[id])
+  : database.child(`item/${id}`).once('value')
+      .then(snap => snap.val())
+
+const toObjectById = array =>
+  array.reduce((a,x) => Object.assign(a, { [x.id]: x }), {})
+
 app({
   state: {
-    item: {},
     items: {},
-    comments: [],
+    stories: [],
+    story: {},
   },
   actions: {
-    addItem: (s,a,item) => ({ items: Object.assign(s.items, item) }),
-    addComment: (s,a,comment) => ({ comments: Object.assign(s.comments, comment) }),
-    setItems: (s,a,d) => ({ items: d }),
-    setItem: (s,a,d) => ({ item: d }),
-    setComments: (s,a,d) => ({ comments: d }),
-    fetchItem: (s,a,id) => _ =>
-      database.child(`item/${id}`).once('value')
-        .then(snap => ({ [id]: snap.val() }))
-        .catch(console.log),
-    fetchItemComments: (s,a,d) => _ => {
-      a.setItem(d)
-      const comments = {}
-      function fetchComments (d) {
-        comments[d.id] = d
-        if (d && d.kids) {
-          return Promise.all(d.kids.map(id =>
-            database.child(`item/${id}`).once('value')
-            .then(snap => snap.val())
-          )).then(kids => Promise.all(kids.map(fetchComments)))
-        }
-        return Promise.resolve()
-      }
-      return fetchComments(d)
-        .then(() => comments)
-    },
-    fetchStories: (s,a,d) => _ =>
-      database.child(`${d}stories`).once('value')
+    setStories: (s,a,stories) => ({ stories }),
+    setStory: (s,a,story) => ({ story }),
+    cacheItems: (s,a,items) => ({
+      items: Object.assign(s.items, toObjectById(items))
+    }),
+    fetchItemComments: (s,a,item) => _ =>
+      item.kids &&
+        Promise.all(item.kids.map(fetchItem(s.items)))
+        .then(items => items.forEach(a.fetchItemComments) || items)
+        .then(a.cacheItems),
+    fetchStories: (s,a,category) => _ =>
+      database.child(`${category}stories`).once('value')
         .then(snap => snap.val())
-        .then(data => Promise.all(data.map(a.fetchItem)))
-        .then(stories => stories.map(a.addItem))
-        .catch(console.log),
-    fetchStory: (s,a,id) => update =>
-      database.child(`item/${id}`).once('value')
-        .then(x => x.val())
-        .then(a.fetchItemComments)
-        .then(a.setComments)
-        .catch(console.log),
+        .then(a.setStories)
+        .then(({ stories }) => Promise.all(stories.map(fetchItem(s.items))))
+        .then(a.cacheItems),
+    fetchStory: (s,a,id) => _ =>
+      fetchItem(s.items)(id)
+        .then(a.setStory)
+        .then(({ story }) => story)
+        .then(a.fetchItemComments),
   },
   events: {
     route: [
-      (s,a,d) => { d.match === '/' ? a.fetchStories('top') : null },
-      (s,a,d) => { d.match === '/:type/:page' ? a.fetchStories(d.params.type) : null },
-      (s,a,d) => { d.match === '/item/:id' ? a.fetchStory(d.params.id) : null },
+      (s,a,d) => { d.match === '/' && a.fetchStories('top') },
+      (s,a,d) => { d.match === '/:type' && a.fetchStories(d.params.type) },
+      (s,a,d) => { d.match === '/item/:id' && a.fetchStory(d.params.id) },
     ],
-    action: console.log,
-    // update: (s,a,d) => d.comments && console.log(`
-    //   count: ${Object.keys(d.comments).length}
-    // `, d)
   },
   view: [
     ['/', Stories],
     ['/item/:id', Story],
-    ['/:type/:page', Stories],
+    ['/:type', Stories],
     ['*', Fallback],
   ],
   mixins: [
-    Router
+    Router,
+    Linker,
   ],
 })

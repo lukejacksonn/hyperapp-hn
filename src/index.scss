@@ -156,6 +156,15 @@ comment- {
   background: #fff;
   margin: 0 auto;
 
+  kids-:not(:empty) {
+    margin-top: 1rem;
+  }
+
+  comment- {
+    padding-right: 0;
+    border-left: 1px solid rgba(0,0,0,.1);
+  }
+
   meta- {
     display: flex;
     margin-bottom: .5rem;

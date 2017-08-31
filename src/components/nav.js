@@ -4,10 +4,10 @@ export const Nav = _ =>
   <nav>
     <wrapper->
       <icon->H</icon->
-      <a href='/top/1'>Top</a>
-      <a href='/new/1'>New</a>
-      <a href='/show/1'>Show</a>
-      <a href='/ask/1'>Ask</a>
-      <a href='/job/1'>Jobs</a>
+      <a href='/top'>Top</a>
+      <a href='/new'>New</a>
+      <a href='/show'>Show</a>
+      <a href='/ask'>Ask</a>
+      <a href='/job'>Jobs</a>
     </wrapper->
   </nav>

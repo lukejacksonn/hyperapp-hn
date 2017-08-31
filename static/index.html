@@ -12,7 +12,7 @@
       var redirect = sessionStorage.redirect
       delete sessionStorage.redirect
       if (redirect && redirect != location.href) history.replaceState(null, null, redirect)
-      if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js')
+      if (location.hostname !== 'localhost' && 'serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js')
     })()</script>
     <script async src="/index.js"></script>
     <link rel="stylesheet" href="/index.css">

@@ -2,7 +2,7 @@ import { h } from 'hyperapp'
 import { Nav } from '../components/nav'
 import { timeSince } from '../helpers/time'
 
-const Item = ({data,actions}) =>
+const Item = ({data,actions}) => data.id &&
   <li>
     <score->{data.score}</score->
     <article>
@@ -22,16 +22,14 @@ const Item = ({data,actions}) =>
     </article>
   </li>
 
-const asArray = o => Object.keys(o).map(k => o[k])
-
-const List = ({items={},actions}) =>
-  <ul>{asArray(items).map(x => <Item data={x} actions={actions}/>)}</ul>
+const List = ({items=[],actions}) =>
+  <ul>{items.map(x => <Item data={x} actions={actions}/>)}</ul>
 
 export const Stories = (s,a) =>
   <main>
     <Nav/>
     <List
-      items={s.items}
+      items={s.stories.slice(0,10).map(story => s.items[story] || {})}
       actions={a}
     />
   </main>
