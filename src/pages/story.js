@@ -18,6 +18,8 @@ var decodeEntities = html => {
   return decodeHTMLEntities(html);
 }
 
+const asArray = o => Object.keys(o).map(k => o[k])
+
 export const Story = (s,a) =>
   <main>
     <Nav/>
@@ -39,7 +41,7 @@ export const Story = (s,a) =>
       </header>
     }
     <comment-list>{
-      s.item && s.item.kids && s.item.kids.map(x =>
+      s.comments && asArray(s.comments).map(x =>
         !x.text ? '' :
         <comment->
           <meta->
@@ -47,6 +49,7 @@ export const Story = (s,a) =>
             <time->{timeSince(x.time)}</time->
           </meta->
           <text->{decodeEntities(x.text)}</text->
+          <kids->{ x.kids && x.kids.map(y => decodeEntities(y.text)) }</kids->
         </comment->
       )
     }</comment-list>

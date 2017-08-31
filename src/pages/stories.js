@@ -22,8 +22,10 @@ const Item = ({data,actions}) =>
     </article>
   </li>
 
-const List = ({items=[],actions}) =>
-  <ul>{items.map(x => <Item data={x} actions={actions}/>)}</ul>
+const asArray = o => Object.keys(o).map(k => o[k])
+
+const List = ({items={},actions}) =>
+  <ul>{asArray(items).map(x => <Item data={x} actions={actions}/>)}</ul>
 
 export const Stories = (s,a) =>
   <main>

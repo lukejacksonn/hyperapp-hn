@@ -41,7 +41,8 @@
     "rollup-plugin-uglify": "^1.0.1"
   },
   "dependencies": {
+    "@hyperapp/router": "^0.2.3",
     "firebase": "3.5.2",
-    "hyperapp": "0.9.3"
+    "hyperapp": "0.12.0"
   }
 }
