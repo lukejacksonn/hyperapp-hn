@@ -1,6 +1,8 @@
 # Hyperapp-hn
 > A hackernews PWA built with HyperApp
 
+Demo: https://hyperapp-hn.deployable.site
+
 Once you have cloned or forked this project, use the following tasks from the project root:
 
 ```
