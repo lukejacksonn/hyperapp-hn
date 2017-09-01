@@ -7,7 +7,7 @@ import nested from "postcss-nested"
 
 export default {
   format: 'iife',
-  sourceMap: 'inline',
+  //sourceMap: 'inline',
   plugins: [
     postcss({
       extract : true,
