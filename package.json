@@ -20,17 +20,23 @@
     "server": {
       "patterns": "package.json",
       "quiet": true
+    },
+    "reload": {
+      "patterns": "package.json",
+      "quiet": true
     }
   },
   "scripts": {
     "static": "ncp static dist",
     "bundle": "rollup -c -i src/index.js -o dist/index.js",
     "server": "http-server-spa dist",
+    "reload": "livereload dist",
     "build": "npm run static && npm run bundle",
     "start": "npm-watch"
   },
   "devDependencies": {
     "http-server-spa": "^1.2.0",
+    "livereload": "^0.6.2",
     "ncp": "^2.0.0",
     "npm-watch": "^0.1.9",
     "postcss-nested": "^2.1.2",
