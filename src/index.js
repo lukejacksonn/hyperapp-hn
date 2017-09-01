@@ -1,22 +1,15 @@
 import { h, app } from 'hyperapp'
 import { Router } from '@hyperapp/router'
 
-import { database } from './helpers/firebase'
 import Linker from './plugins/linker'
 
-import { Fallback } from './pages/fallback'
-import { Stories } from './pages/stories'
-import { Story } from './pages/story'
+import StoriesPage from './pages/stories'
+import StoryPage from './pages/story'
+import FallbackPage from './pages/fallback'
 
-import './index.scss'
+import { database, fetchItem, toObjectById, decodeTextAttribute } from './utils'
 
-const fetchItem = items => id => items[id]
-  ? Promise.resolve(items[id])
-  : database.child(`item/${id}`).once('value')
-      .then(snap => snap.val())
-
-const toObjectById = array =>
-  array.reduce((a,x) => Object.assign(a, { [x.id]: x }), {})
+import './index.css'
 
 app({
   state: {
@@ -28,15 +21,17 @@ app({
     setStories: (s,a,stories) => ({ stories }),
     setStory: (s,a,story) => ({ story }),
     cacheItems: (s,a,items) => ({
-      items: Object.assign(s.items, toObjectById(items))
+      items: Object.assign(s.items, toObjectById(
+        items.map(decodeTextAttribute)
+      ))
     }),
-    fetchItemComments: (s,a,item) => _ =>
+    fetchKids: (s,a,item) => _ =>
       item.kids &&
         Promise.all(item.kids.map(fetchItem(s.items)))
-        .then(items => items.forEach(a.fetchItemComments) || items)
+        .then(items => items.forEach(a.fetchKids) || items)
         .then(a.cacheItems),
-    fetchStories: (s,a,category) => _ =>
-      database.child(`${category}stories`).once('value')
+    fetchStories: (s,a,type) => _ =>
+      database.child(`${type}stories`).once('value')
         .then(snap => snap.val())
         .then(a.setStories)
         .then(({ stories }) => Promise.all(stories.map(fetchItem(s.items))))
@@ -45,7 +40,7 @@ app({
       fetchItem(s.items)(id)
         .then(a.setStory)
         .then(({ story }) => story)
-        .then(a.fetchItemComments),
+        .then(a.fetchKids),
   },
   events: {
     route: [
@@ -55,10 +50,10 @@ app({
     ],
   },
   view: [
-    ['/', Stories],
-    ['/item/:id', Story],
-    ['/:type', Stories],
-    ['*', Fallback],
+    ['/', StoriesPage],
+    ['/:type', StoriesPage],
+    ['/item/:id', StoryPage],
+    ['*', FallbackPage],
   ],
   mixins: [
     Router,

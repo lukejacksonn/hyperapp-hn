@@ -1,6 +1,6 @@
 import { h } from 'hyperapp'
 
-export const Fallback = (s,a) =>
-  <h1 onclick={e => a.router.go('/')}>
-    Back to {location.hostname}
-  </h1>
+export default (s,a) =>
+  h('h1', {},
+    h('a', { href: '/' }, `Back to ${location.hostname}`)
+  )

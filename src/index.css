@@ -5,7 +5,7 @@ html {
 }
 
 body,
-body * {
+* {
   line-height: 1.38em;
   display: block;
   background: none;
@@ -14,6 +14,12 @@ body * {
   border: 0;
   padding: 0;
   outline: 0;
+}
+
+head,
+style,
+script {
+  display: none;
 }
 
 body,
