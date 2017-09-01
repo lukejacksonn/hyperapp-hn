@@ -4,7 +4,7 @@ import { Router } from '@hyperapp/router'
 import './index.css'
 import './startup.js'
 
-import Linker from './plugins/linker'
+import Linker from './mixins/linker'
 
 import StoriesPage from './pages/stories'
 import StoryPage from './pages/story'

@@ -1,4 +1,4 @@
-export default (options) => ({
+export default (emit) => ({
   events: {
     load: (s,a) => addEventListener("click", (e) => {
       if (e.metaKey || e.shiftKey || e.ctrlKey || e.altKey) return
