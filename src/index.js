@@ -1,60 +1,63 @@
-import { h, app, Router } from 'hyperapp'
+import { h, app } from 'hyperapp'
+import { Router } from '@hyperapp/router'
 
-import { database } from './helpers/firebase'
+import './index.css'
+import './startup.js'
 
 import Linker from './plugins/linker'
 
-import { Fallback } from './pages/fallback'
-import { Stories } from './pages/stories'
-import { Story } from './pages/story'
+import StoriesPage from './pages/stories'
+import StoryPage from './pages/story'
+import FallbackPage from './pages/fallback'
 
-import './index.scss'
+import { database, fetchItem, toObjectById, decodeTextAttribute } from './utils'
 
 app({
   state: {
-    item: {},
-    items: [],
+    items: {},
+    stories: [],
+    story: {},
   },
   actions: {
-    setItems: (s,a,d) => ({ items: d }),
-    setItem: (s,a,d) => ({ item: d }),
-    setItemComments: (s,a,d) => ({ item: Object.assign({}, s.item, { kids: d }) }),
-    fetchItem: (s,a,d) =>
-      database.child(`item/${d}`)
-      .once('value')
-      .then(snap => snap.val())
-      .catch(console.log),
-    fetchItemComments: (s,a,d) =>
-      Promise.all(s.item.kids.map(a.fetchItem)),
-    fetchStories: (s,a,d) =>
-      database.child(`${d}stories`)
-      .once('value')
-      .then(snap => snap.val())
-      .then(data => Promise.all(data.map(a.fetchItem)))
-      .then(a.setItems)
-      .catch(console.log),
-    fetchStory: (s,a,d) =>
-      a.fetchItem(d)
-      .then(a.setItem)
-      .then(a.fetchItemComments)
-      .then(a.setItemComments)
-      .catch(console.log),
+    setStories: (s,a,stories) => ({ stories }),
+    setStory: (s,a,story) => ({ story }),
+    cacheItems: (s,a,items) => ({
+      items: Object.assign(s.items, toObjectById(
+        items.map(decodeTextAttribute)
+      ))
+    }),
+    fetchKids: (s,a,item) => _ =>
+      item.kids &&
+        Promise.all(item.kids.map(fetchItem(s.items)))
+        .then(items => items.forEach(a.fetchKids) || items)
+        .then(a.cacheItems),
+    fetchStories: (s,a,type) => _ =>
+      database.child(`${type}stories`).once('value')
+        .then(snap => snap.val())
+        .then(a.setStories)
+        .then(({ stories }) => Promise.all(stories.map(fetchItem(s.items))))
+        .then(a.cacheItems),
+    fetchStory: (s,a,id) => _ =>
+      fetchItem(s.items)(id)
+        .then(a.setStory)
+        .then(({ story }) => story)
+        .then(a.fetchKids),
   },
   events: {
     route: [
-      (s,a,d) => d.match === '/' ? a.fetchStories('top') : null,
-      (s,a,d) => d.match === '/:type/:page' ? a.fetchStories(d.params.type) : null,
-      (s,a,d) => d.match === '/item/:id' ? a.fetchStory(d.params.id) : null,
-    ]
+      (s,a,d) => { d.match === '/' && a.fetchStories('top') },
+      (s,a,d) => { d.match === '/:type' && a.fetchStories(d.params.type) },
+      (s,a,d) => { d.match === '/item/:id' && a.fetchStory(d.params.id) },
+    ],
   },
   view: [
-    ['/', Stories],
-    ['/item/:id', Story],
-    ['/:type/:page', Stories],
-    ['*', Fallback],
+    ['/', StoriesPage],
+    ['/:type', StoriesPage],
+    ['/item/:id', StoryPage],
+    ['*', FallbackPage],
   ],
   mixins: [
     Router,
-    Linker
+    Linker,
   ],
 })
