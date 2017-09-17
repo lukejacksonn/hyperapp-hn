@@ -1,16 +1,19 @@
 import { h, app } from 'hyperapp'
 import { Router } from '@hyperapp/router'
-
-import './index.css'
-import './startup.js'
-
 import Linker from './mixins/linker'
-
 import StoriesPage from './pages/stories'
 import StoryPage from './pages/story'
 import FallbackPage from './pages/fallback'
-
 import { database, fetchItem, toObjectById, decodeTextAttribute } from './utils'
+import './index.css'
+
+// Check for any github-pages 404 redirect
+history.replaceState(null, null, sessionStorage.redirect)
+delete sessionStorage.redirect
+
+// Register service worker if not on localhost
+const local = window.location.host.startsWith('localhost')
+if ('serviceWorker' in navigator && !local) navigator.serviceWorker.register('/sw.js')
 
 app({
   state: {
